@@ -67,7 +67,8 @@ def addLocalPrefix(sdk, site_name, prefix_name, prefix):
     if not site_id:
         return ("Site " + site_name + " couldn't be found")
 
-    # find the prefix filter ID
+    # Security 
+    print("Checking Security Prefix")
     local_filter_id = None
     for prefix_filter in sdk.get.ngfwsecuritypolicylocalprefixes().cgx_content['items']:
         if prefix_name.upper() == prefix_filter['name'].upper():
@@ -88,7 +89,6 @@ def addLocalPrefix(sdk, site_name, prefix_name, prefix):
                 local_filter_id = prefix_filter['id']
                 break
 
-    # find existing prefix filter
     filter_id = None
     for prefix_filter in sdk.get.site_ngfwsecuritypolicylocalprefixes(site_id).cgx_content['items']:
         if prefix_filter['prefix_id'] == local_filter_id:
@@ -96,29 +96,126 @@ def addLocalPrefix(sdk, site_name, prefix_name, prefix):
             filter_json = prefix_filter
             break
     
-    # if not found then create a new prefix filter. If found add a new prefix filter
     if filter_id:
-        # update existing filter
         if prefix in filter_json['ipv4_prefixes']:
-            return ("Prefix " + prefix + " already exists on " + prefix_name + " at " + site_name)
+            print ("Prefix " + prefix + " already exists on " + prefix_name + " at " + site_name)
         else:
             filter_json['ipv4_prefixes'].append(prefix)
             resp = sdk.put.site_ngfwsecuritypolicylocalprefixes(site_id, filter_id, filter_json)
             if not resp:
-                return ("Error adding prefix " + prefix + " to " + prefix_name)
+                print ("Error adding prefix " + prefix + " to " + prefix_name)
             else:
-                return ("Adding prefix " + prefix + " to " + prefix_name)
+                print ("Adding prefix " + prefix + " to " + prefix_name)
     else:
-        # add prefix-filter
         new_prefix = {"prefix_id": local_filter_id, "ipv4_prefixes": [prefix],"ipv6_prefixes":[],"tags":[]}
-        
-
         resp = sdk.post.site_ngfwsecuritypolicylocalprefixes(site_id, new_prefix)
         if not resp:
             print(str(jdout(resp)))
-            return ("Error adding local prefix " + prefix + " from " + prefix_name)
+            print ("Error adding local prefix " + prefix + " from " + prefix_name)
         else:
-            return ("Creating local prefix " + prefix_name + " for site " + site_name + " and adding prefix " + prefix)
+            print ("Creating local prefix " + prefix_name + " for site " + site_name + " and adding prefix " + prefix)
+    
+    
+    # Path 
+    print("Checking Path Prefix")
+    local_filter_id = None
+    for prefix_filter in sdk.get.tenant_networkpolicylocalprefixes().cgx_content['items']:
+        if prefix_name.upper() == prefix_filter['name'].upper():
+            local_filter_id = prefix_filter['id']
+            break
+    if not local_filter_id:
+        lpf_data = {
+            "description": None,
+            "name": prefix_name
+        }
+        resp = sdk.post.tenant_networkpolicylocalprefixes(lpf_data)
+        if not resp:
+            print(str(jdout(resp)))
+            return ("Cloudn't create local prefix filter")
+
+        for prefix_filter in sdk.get.tenant_networkpolicylocalprefixes().cgx_content['items']:
+            if prefix_name.upper() == prefix_filter['name'].upper():
+                local_filter_id = prefix_filter['id']
+                break
+
+    filter_id = None
+    for prefix_filter in sdk.get.site_networkpolicylocalprefixes(site_id).cgx_content['items']:
+        if prefix_filter['prefix_id'] == local_filter_id:
+            filter_id = prefix_filter['id']
+            filter_json = prefix_filter
+            break
+    
+    if filter_id:
+        if prefix in filter_json['ipv4_prefixes']:
+            print ("Prefix " + prefix + " already exists on " + prefix_name + " at " + site_name)
+        else:
+            filter_json['ipv4_prefixes'].append(prefix)
+            resp = sdk.put.site_networkpolicylocalprefixes(site_id, filter_id, filter_json)
+            if not resp:
+                print ("Error adding prefix " + prefix + " to " + prefix_name)
+            else:
+                print ("Adding prefix " + prefix + " to " + prefix_name)
+    else:
+        new_prefix = {"prefix_id": local_filter_id, "ipv4_prefixes": [prefix],"ipv6_prefixes":[],"tags":[]}
+        resp = sdk.post.site_networkpolicylocalprefixes(site_id, new_prefix)
+        if not resp:
+            print(str(jdout(resp)))
+            print ("Error adding local prefix " + prefix + " from " + prefix_name)
+        else:
+            print ("Creating local prefix " + prefix_name + " for site " + site_name + " and adding prefix " + prefix)
+    
+    
+    # QoS 
+    print("Checking QoS Prefix")
+    local_filter_id = None
+    for prefix_filter in sdk.get.tenant_prioritypolicylocalprefixes().cgx_content['items']:
+        if prefix_name.upper() == prefix_filter['name'].upper():
+            local_filter_id = prefix_filter['id']
+            break
+    if not local_filter_id:
+        lpf_data = {
+            "description": None,
+            "name": prefix_name
+        }
+        resp = sdk.post.tenant_prioritypolicylocalprefixes(lpf_data)
+        if not resp:
+            print(str(jdout(resp)))
+            return ("Cloudn't create local prefix filter")
+
+        for prefix_filter in sdk.get.tenant_prioritypolicylocalprefixes().cgx_content['items']:
+            if prefix_name.upper() == prefix_filter['name'].upper():
+                local_filter_id = prefix_filter['id']
+                break
+
+    filter_id = None
+    for prefix_filter in sdk.get.site_prioritypolicylocalprefixes(site_id).cgx_content['items']:
+        if prefix_filter['prefix_id'] == local_filter_id:
+            filter_id = prefix_filter['id']
+            filter_json = prefix_filter
+            break
+    
+    if filter_id:
+        if prefix in filter_json['ipv4_prefixes']:
+            print ("Prefix " + prefix + " already exists on " + prefix_name + " at " + site_name)
+        else:
+            filter_json['ipv4_prefixes'].append(prefix)
+            resp = sdk.put.site_prioritypolicylocalprefixes(site_id, filter_id, filter_json)
+            if not resp:
+                print ("Error adding prefix " + prefix + " to " + prefix_name)
+            else:
+                print ("Adding prefix " + prefix + " to " + prefix_name)
+    else:
+        new_prefix = {"prefix_id": local_filter_id, "ipv4_prefixes": [prefix],"ipv6_prefixes":[],"tags":[]}
+        resp = sdk.post.site_prioritypolicylocalprefixes(site_id, new_prefix)
+        if not resp:
+            print(str(jdout(resp)))
+            print ("Error adding local prefix " + prefix + " from " + prefix_name)
+        else:
+            print ("Creating local prefix " + prefix_name + " for site " + site_name + " and adding prefix " + prefix)
+    return 
+            
+            
+    
     
                  
 def go():
@@ -222,7 +319,7 @@ def go():
             prefix_name = row['Prefix_Name']
             site_name = row['Site_Name']
             prefix = row['IP']
-            print(addLocalPrefix(cgx, site_name, prefix_name, prefix))
+            addLocalPrefix(cgx, site_name, prefix_name, prefix)
     # end of script, run logout to clear session.
     cgx_session.get.logout()
 
